@@ -48,6 +48,7 @@ public class Server : MonoBehaviour
     private Text ServerText;
 	private int numberOfMovesReceived = 0;
 	public Dictionary<int, Player> players = new Dictionary<int, Player> ();
+    private byte error;
 
     void Start()
     {
@@ -76,9 +77,10 @@ public class Server : MonoBehaviour
         {
             case NetworkEventType.Nothing:         
                 break;
-            case NetworkEventType.ConnectEvent:    
-				Debug.Log("Client connected with connection id - " + connectionId);
-                ServerText.text = "Client connected with connection id - " + connectionId;
+            case NetworkEventType.ConnectEvent:    //2
+                Debug.Log("Client connected with connection id : " + connectionId);
+                ServerText.text = "Client connected with connection id : " + connectionId;
+                getClientName(connectionId);
                 break;
 			case NetworkEventType.DataEvent:       
 				string message = Encoding.Unicode.GetString (recBuffer, 0, dataSize);
@@ -94,8 +96,9 @@ public class Server : MonoBehaviour
 						break;
 				}
                 break;
-            case NetworkEventType.DisconnectEvent: 
-                ServerText.text = "Client " + connectionId + "disconnected";
+            case NetworkEventType.DisconnectEvent: //4
+                Debug.Log("Client " + connectionId + " disconnected");
+                ServerText.text = "Client " + connectionId + " disconnected";
                 break;
         }
     }
@@ -139,4 +142,11 @@ public class Server : MonoBehaviour
 		int result = ruleMatrix.rules [finalMove];
 		Debug.Log (result);
 	}
+    public void getClientName(int connectionId)
+    {
+        string message = CommandConstants.GET_NAME + "|" + connectionId.ToString();
+
+        byte[] msg = Encoding.Unicode.GetBytes(message);
+        NetworkTransport.Send(hostId, connectionId, reliableChannel, msg, message.Length * sizeof(char), out error);
+    }
 }
