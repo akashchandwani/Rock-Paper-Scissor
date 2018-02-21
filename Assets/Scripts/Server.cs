@@ -15,6 +15,7 @@ public class Server : MonoBehaviour
     private int MAX_CONNECTION = 2;
     private int port = 5701;
     private Text ServerText;
+    private byte error;
 
     void Start()
     {
@@ -44,15 +45,26 @@ public class Server : MonoBehaviour
             case NetworkEventType.Nothing:         //1
                 break;
             case NetworkEventType.ConnectEvent:    //2
-				Debug.Log("Client connected with connection id - " + connectionId);
-                ServerText.text = "Client connected with connection id - " + connectionId;
+                Debug.Log("Client connected with connection id : " + connectionId);
+                ServerText.text = "Client connected with connection id : " + connectionId;
+                getClientName(connectionId);
                 break;
             case NetworkEventType.DataEvent:       //3
-				ServerText.text = "data received from " + connectionId + Encoding.Unicode.GetString(recBuffer, 0, dataSize);;
+                Debug.Log("data received from " + connectionId + " : " + Encoding.Unicode.GetString(recBuffer, 0, dataSize));
+                ServerText.text = "data received from " + connectionId + " : " + Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                 break;
             case NetworkEventType.DisconnectEvent: //4
-                ServerText.text = "Client " + connectionId + "disconnected";
+                Debug.Log("Client " + connectionId + " disconnected");
+                ServerText.text = "Client " + connectionId + " disconnected";
                 break;
         }
+    }
+
+    public void getClientName(int connectionId)
+    {
+        string message = CommandConstants.GET_NAME + "|" + connectionId.ToString();
+
+        byte[] msg = Encoding.Unicode.GetBytes(message);
+        NetworkTransport.Send(hostId, connectionId, reliableChannel, msg, message.Length * sizeof(char), out error);
     }
 }
